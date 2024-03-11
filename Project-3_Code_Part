@@ -1,0 +1,122 @@
+select * from `data.fraud`
+limit 10;
+
+select distinct(type)
+from `data.fraud`;
+
+---1) Data Exploration-----
+-- Count the number of records in the dataset
+
+SELECT COUNT(*) AS total_transactions
+FROM `data.fraud`;
+
+-- Check the distribution of transaction types
+SELECT type, COUNT(*) AS transaction_count
+FROM `data.fraud`
+GROUP BY type
+ORDER BY transaction_count DESC;
+
+-- Examine the distribution of fraudulent transactions
+SELECT isFraud, COUNT(*) AS fraud_count
+FROM `data.fraud`
+GROUP BY isFraud;
+
+-- Distribution of fraud by transaction type
+SELECT type, COUNT(*) AS fraud_count
+FROM `data.fraud`
+WHERE isFraud = 1
+GROUP BY type;
+
+-- Transaction amount statistics for fraudulent transactions
+SELECT AVG(amount) AS avg_amount, MIN(amount) AS min_amount, MAX(amount) AS max_amount
+FROM `data.fraud`
+WHERE isFraud = 1;
+
+-- Distribution of flagged fraudulent transactions
+SELECT isFlaggedFraud, COUNT(*) AS flagged_fraud_count
+FROM `data.fraud`
+GROUP BY isFlaggedFraud;
+
+-- Comparison of customer balances by transaction type
+SELECT type, AVG(oldbalanceOrg) AS avg_old_balance_org, AVG(newbalanceOrig) AS avg_new_balance_org
+FROM `data.fraud`
+GROUP BY type;
+
+-- Recipient balance analysis by transaction type
+SELECT type, AVG(oldbalanceDest) AS avg_old_balance_dest, AVG(newbalanceDest) AS avg_new_balance_dest
+FROM `data.fraud`
+GROUP BY type;
+
+--- Addressing Business Problem
+-- 1) Detecting the illegal transactions 
+--- Identify and flag illegal transactions
+UPDATE `data.fraud`
+SET isFlaggedFraud = 1
+WHERE amount > 200000;
+
+-- 2) Analysis of Fraudulent transactions 
+--- Calculate the total amount involved in fraudulent transactions
+SELECT SUM(amount) AS total_fraudulent_amount
+FROM `data.fraud`
+WHERE isFraud = 1;
+
+-- Analyze the characteristics of fraudulent transactions
+SELECT type, nameOrig, COUNT(*) AS fraud_count
+FROM `data.fraud`
+WHERE isFraud = 1
+GROUP BY type, nameOrig
+ORDER BY fraud_count DESC;
+
+-- 3) customer balances 
+--- Calculate the average balance of customers before and after transactions
+SELECT nameOrig, AVG(oldbalanceOrg) AS avg_old_balance, AVG(newbalanceOrig) AS avg_new_balance
+FROM `data.fraud`
+GROUP BY nameOrig
+ORDER BY avg_old_balance DESC;
+
+-- Identify customers with the most fraudulent transactions
+SELECT nameOrig, COUNT(*) AS fraud_count
+FROM `data.fraud`
+WHERE isFraud = 1
+GROUP BY nameOrig
+ORDER BY fraud_count DESC;
+
+-- 4) Analysis of the recipients 
+--- Analyze the recipients of fraudulent transactions
+SELECT nameDest, COUNT(*) AS fraud_count
+FROM `data.fraud`
+WHERE isFraud = 1
+GROUP BY nameDest
+ORDER BY fraud_count DESC;
+
+-- Calculate the average balance of recipients before and after transactions
+SELECT nameDest, AVG(oldbalanceDest) AS avg_old_balance, AVG(newbalanceDest) AS avg_new_balance
+FROM `data.fraud`
+GROUP BY nameDest
+ORDER BY avg_old_balance DESC;
+
+-- 5) Temporal Analysis 
+--- Analyze the distribution of transactions over time (in steps)
+SELECT step, type, COUNT(*) AS transaction_count
+FROM `data.fraud`
+GROUP BY step, type
+ORDER BY step;
+
+-- Calculate the total amount of transactions over time
+SELECT step, SUM(amount) AS total_amount
+FROM `data.fraud`
+GROUP BY step
+ORDER BY step;
+
+-- 6) Transaction Amount Analysis:
+--- Calculate transaction statistics by type
+SELECT type, AVG(amount) AS avg_amount, MIN(amount) AS min_amount, MAX(amount) AS max_amount
+FROM `data.fraud`
+GROUP BY type;
+
+--- 7) Pattern Detection
+-- Detect patterns in fraudulent transactions
+SELECT type, COUNT(*) AS fraud_count
+FROM `data.fraud`
+WHERE isFraud = 1
+GROUP BY type;
